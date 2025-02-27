@@ -144,8 +144,8 @@ try {
             // ワークフローIDを取得
             $wf_id = $data['data']['ticket']['id'];
 
-            $comment = $data['data']['ticket']['inputs'][27]['value'];
-            $anti_social_check_results = $data['data']['ticket']['inputs'][28]['value'];
+            // $comment = $data['data']['ticket']['inputs'][27]['value'];
+            // $anti_social_check_results = $data['data']['ticket']['inputs'][28]['value'];
             $employee = $data['user']['employeeId'];
             $user_id = $data['data']['ticket']['author']['email'];
 
@@ -199,6 +199,35 @@ try {
                     $comment = $return_comments[$application_type];
                     $comment_result = addComment($wf_id, $comment);
                     echo $comment;
+                }
+            }
+
+            //webhookのイベント’承認’の場合
+            if ($event_type == 'ticket_approved') {
+                $approve_result = approve($wf_id);
+                if ($approve_result) {
+                    echo '承認テスト　承認成功\n中野くんのファイル始動';
+                    // https://unireco.rextgw.work/trading_Application/trading_Anti2.phpにデータをポストする
+                    $url = 'https://unireco.rextgw.work/trading_Application/trading_Anti2.php';
+                    $ch = curl_init();
+                    // $dataをPOSTする
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+                    $response = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+
+                    if ($httpCode == 404) {
+                        echo "エラー: 404 Not Found - URLが見つかりません。";
+                    } else {
+                        echo $response;
+                    }
+                    echo '中野くんのファイル終了';
+                } else {
+                    echo '承認テスト　承認失敗';
                 }
             }
 
